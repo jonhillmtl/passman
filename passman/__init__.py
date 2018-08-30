@@ -39,6 +39,10 @@ def prepare_args(command):
     """ touch up the args with separate requirements for each command """
     
     # TODO JHILL: unglobalize this
+
+    # TODO JHILL: use vault_name and vault_password everywhere, even though it's longer
+    # TODO JHILL: make password interactive everywhere so it doesn't go in the history
+
     global args
     if command == 'create_vault':
         argparser.add_argument("--name", required=True)
