@@ -1,14 +1,15 @@
 from .repo import Repo, RepoNotFoundError
 from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 from termcolor import colored
 import base64
 import datetime
 import json
 import os
 import uuid
+
+from .utils import get_encryption_key
+from .repo import Repo
 
 
 class VaultNotFoundError(Exception):
@@ -35,29 +36,6 @@ class VaultWeakPasswordError(Exception):
         self.error = error
 
 
-# TODO JHILL: put this on the repo
-def get_salt():
-    # TODO JHILL: error handling.... although if the file isn't there, that's it really
-    salt_filename = os.path.expanduser("~/passman_vaults/.salt")
-    with open(salt_filename, "rb") as f:
-        return f.read()
-
-
-def get_encryption_key(password):
-    password = password.encode('utf-8')
-    salt = get_salt()
-
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
-    )
-    key = base64.urlsafe_b64encode(kdf.derive(password))
-    return key
-
-
 class Vault():
     name = None
     password = None
@@ -73,6 +51,7 @@ class Vault():
         if len(password) < 8:
             return False, "password must be at least 8 characters long"
         return True, ""
+
 
     @property
     def exists(self):
@@ -244,7 +223,7 @@ class Vault():
     def write(self, data):
         assert type(data) == dict
 
-        key = get_encryption_key(self.password)
+        key = get_encryption_key(Repo.salt(), self.password)
         fernet = Fernet(key)
 
         with open(self.data_path, "wb") as f:
@@ -258,7 +237,7 @@ class Vault():
             raise VaultNotFoundError()
         else:
             with open(self.data_path, "rb") as f:
-                key = get_encryption_key(self.password)
+                key = get_encryption_key(Repo.salt(), self.password)
                 fernet = Fernet(key)
                 try:
                     return json.loads(fernet.decrypt(f.read()))
