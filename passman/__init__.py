@@ -4,6 +4,7 @@ from str2bool import str2bool
 import argparse
 import os
 import sys
+import getpass
 
 from .repo import Repo, RepoAlreadyExistsError
 # TODO JHILL: one at a time
@@ -34,7 +35,6 @@ argparser.add_argument("--interactive", default=False, type=str2bool, required=F
 args, unknown = argparser.parse_known_args()
 
 
-
 def prepare_args(command):
     """ touch up the args with separate requirements for each command """
     
@@ -44,13 +44,16 @@ def prepare_args(command):
     # TODO JHILL: make password interactive everywhere so it doesn't go in the history
 
     global args
+    interactive_password = False
+    confirm_password = False
     if command == 'create_vault':
-        argparser.add_argument("--name", required=True)
-        argparser.add_argument("--password", required=True)
+        argparser.add_argument("--vault_name", required=True)
+        interactive_password = True
+        confirm_password = True
 
     elif command == 'dump_vault':
-        argparser.add_argument("--name", required=True)
-        argparser.add_argument("--password", required=True)
+        argparser.add_argument("--vault_name", required=True)
+        interactive_password = True
 
     elif command == 'list_vaults':
         pass
@@ -93,9 +96,21 @@ def prepare_args(command):
         argparser.add_argument("--name", required=True)
         argparser.add_argument("--password", required=True)
 
+
+    if interactive_password is True:
+        if confirm_password is True:
+            password = getpass.getpass("enter password: ")
+            confirm_password = getpass.getpass("confirm password: ")
+            if password != confirm_password:
+                error_exit("passwords do not match")
+        else:
+            password = getpass.getpass("enter password: ")
+        sys.argv.extend(['--vault_password', password])
+        argparser.add_argument("--vault_password", required=True)
+
     # then reparse them to enforce the required-ness of them
     args = argparser.parse_args()
-
+    
 
 def call_command(command):
     if command not in globals():

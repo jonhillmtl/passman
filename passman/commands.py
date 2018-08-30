@@ -30,7 +30,7 @@ def change_vault_password(args):
 
 
 def create_vault(args):
-    vault = Vault(args.name, args.password)
+    vault = Vault(args.vault_name, args.vault_password)
 
     try:
         vault.create()
@@ -72,7 +72,7 @@ def delete_vault_entry(args):
 
 
 def dump_vault(args):
-    vault = Vault(args.name, args.password)
+    vault = Vault(args.vault_name, args.vault_password)
 
     try:
         vault.add_history_entry('dump_vault', None, None)
