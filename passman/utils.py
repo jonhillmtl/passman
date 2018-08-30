@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
+import time
 
 def error_exit(message):
     print(colored(message, "red"))
@@ -11,7 +12,11 @@ def error_exit(message):
 
 
 def get_rotation_time():
-    return 'aaabbbb'
+    t = time.time()
+    t = int(t)
+
+    t = t - (t % 300)
+    return bytes(str(t), 'utf-8')
 
 def smart_choice(choices):
     for index, choice in enumerate(choices):
