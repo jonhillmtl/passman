@@ -47,6 +47,8 @@ def delete_vault_entry(args):
     vault = Vault(args.name, args.password)
 
     try:
+        # TODO JHILL: put this in a utility function because we use it somewhere
+        # else too
         vault_data = vault.read()
         entry_id = smart_choice(
             [
@@ -112,7 +114,7 @@ def merge_vaults(args):
 
 
 def security_audit(args):
-    vault = Vault(args.name, args.password)
+    vault = Vault(args.vault_name, args.vault_password)
 
     try:
         audits = vault.security_audit()

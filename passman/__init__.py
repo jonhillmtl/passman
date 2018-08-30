@@ -60,42 +60,50 @@ def prepare_args(command):
 
     elif command == 'add_vault_entry':
         argparser.add_argument("--vault_name", required=True)
-        argparser.add_argument("--vault_password", required=True)
         argparser.add_argument("--name", required=True)
         argparser.add_argument("--username", required=True)
         argparser.add_argument("--password", required=True)
         argparser.add_argument("--tags", required=False)
 
+        interactive_password = True
+
     elif command == 'resalt':
-        argparser.add_argument("--password", required=True)
+        pass
 
     elif command == 'merge_vaults':
         argparser.add_argument("--v1", required=True)
         argparser.add_argument("--v2", required=True)
+        
+        # TODO JHILL: hmmmmm..... how do we get these interactively?
+        # just do it right here I guess?
         argparser.add_argument("--v1pw", required=True)
         argparser.add_argument("--v2pw", required=True)
 
     elif command =='change_vault_password':
-        argparser.add_argument("--name", required=True)
+        argparser.add_argument("--vault_name", required=True)
+
+        # TODO JHILL: hmmmmm..... how do we get these interactively?
+        # just do it right here I guess?
         argparser.add_argument("--old_password", required=True)
         argparser.add_argument("--new_password", required=True)
-        
+
     elif command == 'delete_vault_entry':
-        argparser.add_argument("--name", required=True)
-        argparser.add_argument("--password", required=True)
+        argparser.add_argument("--vault_name", required=True)
+
+        interactive_password = True
 
     elif command == 'update_vault_entry':
         argparser.add_argument("--vault_name", required=True)
-        argparser.add_argument("--vault_password", required=True)
         argparser.add_argument("--name", required=True)
         argparser.add_argument("--username", required=True)
         argparser.add_argument("--password", required=True)
         argparser.add_argument("--tags", required=False)
 
-    elif command == 'security_audit':
-        argparser.add_argument("--name", required=True)
-        argparser.add_argument("--password", required=True)
+        interactive_password = True
 
+    elif command == 'security_audit':
+        argparser.add_argument("--vault_name", required=True)
+        interactive_password = True
 
     if interactive_password is True:
         if confirm_password is True:
@@ -105,6 +113,9 @@ def prepare_args(command):
                 error_exit("passwords do not match")
         else:
             password = getpass.getpass("enter password: ")
+        
+        # neat trick to put something on the command line and then 
+        # you can parse it like it was always there
         sys.argv.extend(['--vault_password', password])
         argparser.add_argument("--vault_password", required=True)
 
