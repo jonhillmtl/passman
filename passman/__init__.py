@@ -27,7 +27,9 @@ COMMANDS = [
     'change_vault_password',    # implemented
 
     'resalt',                   # hmmm... they'd have to provide password for every vault
-    'security_audit'            # implemented
+    'security_audit',           # implemented,
+    
+    'pw'                        # go for it
 ]
 
 
@@ -106,6 +108,13 @@ def prepare_args(command):
     elif command == 'security_audit':
         argparser.add_argument("--vault_name", required=True)
         interactive_password = True
+    
+    elif command == 'pw':
+        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--search", required=True)
+
+        interactive_password = True
+
 
     # then reparse them to enforce the required-ness of them
     args = argparser.parse_args()

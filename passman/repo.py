@@ -63,7 +63,6 @@ class Repo():
             timestamp=datetime.datetime.now().isoformat()
         )
 
-        print(data)
         with open(path, "wb") as f:
             f.write(fernet.encrypt(json.dumps(data).encode('utf-8')))
 

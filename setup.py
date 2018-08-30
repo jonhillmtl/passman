@@ -12,7 +12,8 @@ setup(name='passman',
     install_requires=[
         'cryptography',
         'termcolor',
-        'str2bool'
+        'str2bool',
+        'pyperclip'
     ],
 
     # TODO JHILL: this isn't working

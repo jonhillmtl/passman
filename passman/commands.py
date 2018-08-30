@@ -4,6 +4,7 @@ from .vault import (Vault, VaultNotFoundError, VaultAlreadyExistsError,
 from .utils import error_exit, smart_choice
 from termcolor import colored
 import pprint
+import pyperclip
 
 def add_vault_entry(args):
     vault = Vault(args.vault_name, args.vault_password)
@@ -111,6 +112,32 @@ def merge_vaults(args):
         # TODO JHILL: add_history_entry
     except VaultWrongPasswordError as e:
         error_exit("the password for {} was wrong".format(e.vault_name))
+
+
+def pw(args):
+    vault = Vault(args.vault_name, args.vault_password)
+    vault_data = vault.read()
+
+    matches = []
+    for entry in vault_data['entries']:
+        if args.search.lower() in entry['name'].lower():
+            matches.append(entry)
+    if len(matches) == 0:
+        error_exit("no matches found for {}".format(args.search))
+    entry_id = smart_choice(
+            [
+                dict(
+                    choice_data=index,
+                    description="{} {}".format(
+                        entry['name'],
+                        entry['username']
+                    )
+                ) for (index, entry) in enumerate(matches)]
+        )
+
+    if entry_id != -1:
+        pyperclip.copy(matches[entry_id]['password'])
+        print(colored("copied to clipboard", "green"))
 
 
 def security_audit(args):
