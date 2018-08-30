@@ -135,7 +135,8 @@ def prepare_args(command):
             Repo.write_cached_password(args.vault_name, password)
         except VaultWrongPasswordError:
             error_exit("password is wrong")
-
+        except VaultNotFoundError:
+            pass
 
 
 def call_command(command):

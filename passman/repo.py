@@ -38,10 +38,8 @@ class Repo():
                 data = json.loads(fernet.decrypt(f.read()))
                 return data[vault_name]['password']
             except InvalidToken:
-                print("passwords went stale")
                 return None
             except KeyError:
-                print("no cached password for that")
                 return None
         return None
 

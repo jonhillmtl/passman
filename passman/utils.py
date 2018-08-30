@@ -18,13 +18,14 @@ def get_rotation_time():
     t = t - (t % 300)
     return bytes(str(t), 'utf-8')
 
+
 def smart_choice(choices):
     for index, choice in enumerate(choices):
         print("{}: {}".format(index, choice['description']))
     print("q: quit")
 
     while True:
-        print("choose: ")
+        print("choose: ", end='')
         choice = input()
         if choice.lower().strip() == 'q':
             return -1
@@ -33,7 +34,7 @@ def smart_choice(choices):
                 choice = int(choice)
             except TypeError:
                 continue
-            
+
             if choice < len(choices):
                 return choices[choice]['choice_data']
 
@@ -49,5 +50,6 @@ def get_encryption_key(salt, password):
         iterations=100000,
         backend=default_backend()
     )
+
     key = base64.urlsafe_b64encode(kdf.derive(password))
     return key
