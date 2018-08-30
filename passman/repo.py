@@ -28,7 +28,6 @@ class Repo():
 
     @staticmethod
     def get_cached_password(vault_name):
-
         key = get_encryption_key(Repo.salt(), get_rotation_time())
         fernet = Fernet(key)
         path = os.path.join(Repo.path, '.cached_passwords')
@@ -50,13 +49,21 @@ class Repo():
         fernet = Fernet(key)
         path = os.path.join(Repo.path, '.cached_passwords')
 
-        # TODO JHILL: lots needs to be done here, need to merge in data
         data = dict()
-        data[vault_name] =dict(
+
+        try:
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    data = json.loads(fernet.decrypt(f.read()))
+        except InvalidToken:
+            pass
+
+        data[vault_name] = dict(
             password=password,
             timestamp=datetime.datetime.now().isoformat()
         )
 
+        print(data)
         with open(path, "wb") as f:
             f.write(fernet.encrypt(json.dumps(data).encode('utf-8')))
 
