@@ -7,7 +7,7 @@ import sys
 import getpass
 
 from .repo import Repo, RepoAlreadyExistsError
-from .vault import VaultWrongPasswordError
+from .vault import Vault, VaultWrongPasswordError
 
 # TODO JHILL: one at a time
 from .commands import *
@@ -34,9 +34,17 @@ COMMANDS = [
     'clear_cache'               # go for it
 ]
 
+
 COMMAND_ALIASES = dict(
     lv='list_vaults',
-    sa='security_audit'
+    sa='security_audit',
+    cv='create_vault',
+    dv='dumo_vault',
+    ave='add_vault_entry',
+    dve='delete_vault_entry',
+    mv='merge_vaults',
+    cvp='change_vault_password',
+    cc='clear_cache'
 )
 
 
@@ -57,12 +65,26 @@ def prepare_args(command):
 
     global args
     interactive_password = False
-    confirm_password = False
 
     if command == 'create_vault':
         argparser.add_argument("--vault_name", required=True)
+        
+        args = argparser.parse_args()
+        
+        vault = Vault(args.vault_name, None)
+        if vault.exists:
+            error_exit('vault already exists')
 
-        confirm_password = True
+        password = getpass.getpass("enter password: ")
+        confirm_password = getpass.getpass("confirm password: ")
+        if password != confirm_password:
+            error_exit("passwords do not match")
+
+        sys.argv.extend(['--vault_password', password])
+        argparser.add_argument("--vault_password", required=True)
+
+        # then reparse them to grab any --vault_password that might have been added
+        args = argparser.parse_args()
 
     elif command == 'dump_vault':
         argparser.add_argument("--vault_name", required=True)
@@ -130,12 +152,12 @@ def prepare_args(command):
     # then reparse them to enforce the required-ness of them
     args = argparser.parse_args()
 
-    # TODO JHILL: check if vault exists before asking for password
     if interactive_password is True:
-        password = Repo.get_cached_password(args.vault_name)
-        if password is None:
-            password = getpass.getpass("enter password: ")
-
+        # password = Repo.get_cached_password(args.vault_name)
+        # if password is None:
+            # password = getpass.getpass("enter password: ")
+        password = getpass.getpass("enter password: ")
+        
         # neat trick to put something on the command line and then 
         # you can parse it like it was always there
         sys.argv.extend(['--vault_password', password])
@@ -147,23 +169,11 @@ def prepare_args(command):
         vault = Vault(args.vault_name, args.vault_password)
         try:
             vault.read()
-            Repo.write_cached_password(args.vault_name, password)
+            # Repo.write_cached_password(args.vault_name, password)
         except VaultWrongPasswordError:
             error_exit("password is wrong")
         except VaultNotFoundError:
             error_exit("vault not found")
-
-    elif confirm_password is True:
-        password = getpass.getpass("enter password: ")
-        confirm_password = getpass.getpass("confirm password: ")
-        if password != confirm_password:
-            error_exit("passwords do not match")
-
-        sys.argv.extend(['--vault_password', password])
-        argparser.add_argument("--vault_password", required=True)
-
-        # then reparse them to grab any --vault_password that might have been added
-        args = argparser.parse_args()
 
 
 def call_command(command):

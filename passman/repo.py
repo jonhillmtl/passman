@@ -1,8 +1,9 @@
 import os
-from .utils import get_encryption_key, get_rotation_time
+from .utils import get_encryption_key, get_rotation_time, get_cache_password
 from cryptography.fernet import Fernet, InvalidToken
 import datetime
 import json
+from uuid import getnode as get_mac
 
 class RepoAlreadyExistsError(Exception):
     pass
@@ -25,10 +26,14 @@ class Repo():
         else:
             raise RepoAlreadyExistsError()
 
-
     @staticmethod
     def get_cached_password(vault_name):
-        key = get_encryption_key(Repo.salt(), get_rotation_time())
+        return None
+        """
+        cache_password = "{}_{}".format(get_rotation_time(), get_mac())
+        print(cache_password)
+
+        key = get_encryption_key(Repo.salt(), cache_password)
         fernet = Fernet(key)
         path = os.path.join(Repo.path, '.cached_passwords')
 
@@ -41,11 +46,17 @@ class Repo():
             except KeyError:
                 return None
         return None
-
+        """
 
     @staticmethod
     def write_cached_password(vault_name, password):
-        key = get_encryption_key(Repo.salt(), get_rotation_time())
+        return False
+
+        """
+        cache_password = "{}_{}".format(get_rotation_time(), get_mac())
+        print(cache_password)
+        
+        key = get_encryption_key(Repo.salt(), cache_password)
         fernet = Fernet(key)
         path = os.path.join(Repo.path, '.cached_passwords')
 
@@ -65,7 +76,7 @@ class Repo():
 
         with open(path, "wb") as f:
             f.write(fernet.encrypt(json.dumps(data).encode('utf-8')))
-
+        """
 
     @staticmethod
     def salt():

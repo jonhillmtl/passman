@@ -132,20 +132,27 @@ def security_audit(args):
     vault = Vault(args.vault_name, args.vault_password)
 
     audits = vault.security_audit()
+    secure = True
+
     for password, data in audits.items():
         if len(data['entries']) > 1:
+            secure = False
             print("{} accounts have the same password: {}".format(
                 len(data['entries']),
                 ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
             ))
-        
+
         if data['valid'] is False:
+            secure = False
             print("{} accounts have weak passwords: {}".format(
                 len(data['entries']),
                 ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
             ))
 
-        # TODO JHILL: add_history_entry
+    if secure is True:
+        print(colored("secure", "green"))
+
+    # TODO JHILL: add_history_entry
 
 
 def update_vault_entry(args):

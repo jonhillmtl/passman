@@ -13,8 +13,7 @@ def error_exit(message):
 
 def get_rotation_time():
     t = int(time.time())
-    t = t - (t % 300)
-    return bytes(str(t), 'utf-8')
+    return t - (t % 300)
 
 
 def smart_choice(choices):
@@ -36,6 +35,9 @@ def smart_choice(choices):
             if choice < len(choices):
                 return choices[choice]['choice_data']
 
+
+def get_cache_password():
+    return None
 
 def get_encryption_key(salt, password):
     if type(password) == str:
