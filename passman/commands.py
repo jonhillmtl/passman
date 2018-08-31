@@ -26,9 +26,6 @@ def change_vault_password(args):
         vault.change_password(args.new_password)
     except VaultWeakPasswordError as e:
         error_exit("the password is too weak: {}".format(e.error))
-    except VaultWrongPasswordError as e:
-        error_exit("the password for '{}' is wrong".format(args.name))
-
 
 def create_vault(args):
     vault = Vault(args.vault_name, args.vault_password)
@@ -36,6 +33,8 @@ def create_vault(args):
     try:
         vault.create()
         vault.add_history_entry('create_vault', None, None)
+        
+        # TODO JHILL: write cached password to cache file
     except VaultAlreadyExistsError as e:
         error_exit("vault already exists")
     except RepoNotFoundError as e:
@@ -47,41 +46,33 @@ def create_vault(args):
 def delete_vault_entry(args):
     vault = Vault(args.name, args.password)
 
-    try:
-        # TODO JHILL: put this in a utility function because we use it somewhere
-        # else too
-        vault_data = vault.read()
-        entry_id = smart_choice(
-            [
-                dict(
-                    choice_data=entry['id'],
-                    description="{}: {} {} {}".format(
-                        entry['id'],
-                        entry['name'],
-                        entry['username'],
-                        entry['password']
-                    )
-                ) for entry in vault_data['entries']]
-        )
+    # TODO JHILL: put this in a utility function because we use it somewhere
+    # else too
+    vault_data = vault.read()
+    entry_id = smart_choice(
+        [
+            dict(
+                choice_data=entry['id'],
+                description="{}: {} {} {}".format(
+                    entry['id'],
+                    entry['name'],
+                    entry['username'],
+                    entry['password']
+                )
+            ) for entry in vault_data['entries']]
+    )
 
-        if entry_id != -1:
-            print(entry_id)
-            vault.delete_entry(entry_id)
+    if entry_id != -1:
+        print(entry_id)
+        vault.delete_entry(entry_id)
 
-            # TODO JHILL: add_history_entry
-
-    except VaultWrongPasswordError:
-        error_exit("wrong password for {}".format(args.name))
-
+        # TODO JHILL: add_history_entry
 
 def dump_vault(args):
     vault = Vault(args.vault_name, args.vault_password)
 
-    try:
-        vault.add_history_entry('dump_vault', None, None)
-        pprint.pprint(vault.read())
-    except VaultWrongPasswordError:
-        error_exit("wrong password for {}".format(args.name))
+    vault.add_history_entry('dump_vault', None, None)
+    pprint.pprint(vault.read())
 
 
 def init(args):
@@ -106,12 +97,9 @@ def merge_vaults(args):
     target = Vault(args.v1, args.v1pw)
     source = Vault(args.v2, args.v2pw)
 
-    try:
-        target.merge_vault(source)
-        
-        # TODO JHILL: add_history_entry
-    except VaultWrongPasswordError as e:
-        error_exit("the password for {} was wrong".format(e.vault_name))
+    target.merge_vault(source)
+
+    # TODO JHILL: add_history_entry
 
 
 def pw(args):
@@ -143,49 +131,41 @@ def pw(args):
 def security_audit(args):
     vault = Vault(args.vault_name, args.vault_password)
 
-    try:
-        audits = vault.security_audit()
-        for password, data in audits.items():
-            if len(data['entries']) > 1:
-                print("{} accounts have the same password: {}".format(
-                    len(data['entries']),
-                    ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
-                ))
-            
-            if data['valid'] is False:
-                print("{} accounts have weak passwords: {}".format(
-                    len(data['entries']),
-                    ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
-                ))
+    audits = vault.security_audit()
+    for password, data in audits.items():
+        if len(data['entries']) > 1:
+            print("{} accounts have the same password: {}".format(
+                len(data['entries']),
+                ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
+            ))
+        
+        if data['valid'] is False:
+            print("{} accounts have weak passwords: {}".format(
+                len(data['entries']),
+                ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
+            ))
 
-            # TODO JHILL: add_history_entry
-    except VaultWrongPasswordError as e:
-        error_exit("the password for {} was wrong".format(e.vault_name))
+        # TODO JHILL: add_history_entry
 
 
 def update_vault_entry(args):
     vault = Vault(args.vault_name, args.vault_password)
 
-    try:
-        vault_data = vault.read()
-        entry_id = smart_choice(
-            [
-                dict(
-                    choice_data=entry['id'],
-                    description="{}: {} {} {}".format(
-                        entry['id'],
-                        entry['name'],
-                        entry['username'],
-                        entry['password']
-                    )
-                ) for entry in vault_data['entries']]
-        )
+    vault_data = vault.read()
+    entry_id = smart_choice([
+        dict(
+            choice_data=entry['id'],
+            description="{}: {} {} {}".format(
+                entry['id'],
+                entry['name'],
+                entry['username'],
+                entry['password']
+            )
+        ) for entry in vault_data['entries']
+    ])
 
-        if entry_id != -1:
-            print(entry_id)
-            vault.update_entry(entry_id, name=args.name, username=args.username, password=args.password)
+    if entry_id != -1:
+        print(entry_id)
+        vault.update_entry(entry_id, name=args.name, username=args.username, password=args.password)
 
-            # TODO JHILL: add_history_entry
-
-    except VaultWrongPasswordError:
-        error_exit("wrong password for {}".format(args.name))
+        # TODO JHILL: add_history_entry

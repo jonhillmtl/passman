@@ -12,9 +12,7 @@ def error_exit(message):
 
 
 def get_rotation_time():
-    t = time.time()
-    t = int(t)
-
+    t = int(time.time())
     t = t - (t % 300)
     return bytes(str(t), 'utf-8')
 

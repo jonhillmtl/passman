@@ -28,9 +28,17 @@ COMMANDS = [
 
     'resalt',                   # hmmm... they'd have to provide password for every vault
     'security_audit',           # implemented,
-    
-    'pw'                        # go for it
+
+    'pw'                        # implemented,
+
+    'clear_cache'               # go for it
 ]
+
+COMMAND_ALIASES = dict(
+    lv='list_vaults',
+    sa='security_audit'
+)
+
 
 
 argparser = argparse.ArgumentParser()
@@ -50,13 +58,15 @@ def prepare_args(command):
     global args
     interactive_password = False
     confirm_password = False
+
     if command == 'create_vault':
         argparser.add_argument("--vault_name", required=True)
-        interactive_password = True
+
         confirm_password = True
 
     elif command == 'dump_vault':
         argparser.add_argument("--vault_name", required=True)
+
         interactive_password = True
 
     elif command == 'list_vaults':
@@ -107,6 +117,7 @@ def prepare_args(command):
 
     elif command == 'security_audit':
         argparser.add_argument("--vault_name", required=True)
+
         interactive_password = True
     
     elif command == 'pw':
@@ -119,23 +130,18 @@ def prepare_args(command):
     # then reparse them to enforce the required-ness of them
     args = argparser.parse_args()
 
+    # TODO JHILL: check if vault exists before asking for password
     if interactive_password is True:
-        if confirm_password is True:
+        password = Repo.get_cached_password(args.vault_name)
+        if password is None:
             password = getpass.getpass("enter password: ")
-            confirm_password = getpass.getpass("confirm password: ")
-            if password != confirm_password:
-                error_exit("passwords do not match")
-        else:
-            password = Repo.get_cached_password(args.vault_name)
-            if password is None:
-                password = getpass.getpass("enter password: ")
 
         # neat trick to put something on the command line and then 
         # you can parse it like it was always there
         sys.argv.extend(['--vault_password', password])
         argparser.add_argument("--vault_password", required=True)
 
-        # then reparse them to grab and --vault_password that might have been added
+        # then reparse them to grab any --vault_password that might have been added
         args = argparser.parse_args()
 
         vault = Vault(args.vault_name, args.vault_password)
@@ -145,7 +151,19 @@ def prepare_args(command):
         except VaultWrongPasswordError:
             error_exit("password is wrong")
         except VaultNotFoundError:
-            pass
+            error_exit("vault not found")
+
+    elif confirm_password is True:
+        password = getpass.getpass("enter password: ")
+        confirm_password = getpass.getpass("confirm password: ")
+        if password != confirm_password:
+            error_exit("passwords do not match")
+
+        sys.argv.extend(['--vault_password', password])
+        argparser.add_argument("--vault_password", required=True)
+
+        # then reparse them to grab any --vault_password that might have been added
+        args = argparser.parse_args()
 
 
 def call_command(command):
@@ -155,11 +173,15 @@ def call_command(command):
 
 
 def main():
-    if args.command not in COMMANDS:
-        error_exit("{} not in ({})".format(args.command, ", ".join(COMMANDS)))
+    command = args.command
+    if command not in COMMANDS:
+        if command not in COMMAND_ALIASES:
+            error_exit("{} not in ({})".format(args.command, ", ".join(COMMANDS)))
+        else:
+            command = COMMAND_ALIASES[command]
 
-    prepare_args(args.command)
-    call_command(args.command)
+    prepare_args(command)
+    call_command(command)
 
 
 if __name__ == '__main__':

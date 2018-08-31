@@ -2,7 +2,6 @@ from .repo import Repo, RepoNotFoundError
 from cryptography.fernet import Fernet, InvalidToken
 
 from termcolor import colored
-import base64
 import datetime
 import json
 import os
