@@ -103,6 +103,7 @@ class Vault():
 
             self.write(vault_data)
 
+            # TODO JHILL: don't print in here
             print(colored("created {}".format(vault_path), "green"))
 
         return True
@@ -174,7 +175,7 @@ class Vault():
         validate_password, pw_error = Vault.validate_password(new_password)
         if  validate_password is False:
             raise VaultWeakPasswordError(pw_error)
-        
+
         vault_data = self.read()
         self.password = new_password
         self.write(vault_data)
@@ -193,13 +194,21 @@ class Vault():
         # that is NOT this entry.... raise VaultEntryAlreadyExistsError
         # and catch it in the calling command
 
-        # TODO JHILL: update the timestamp! then use it for the security audit!
-
+        new_entry_data = dict(**kwargs)
+        entry = None
         vault_data = self.read()
         for index, entry in enumerate(vault_data['entries']):
             if entry['id'] == entry_id:
-                vault_data['entries'][index].update(**kwargs)
+                if entry['password'] == new_entry_data['password']:
+                    # TODO JHILL: don't print in here
+                    print(colored("password was the same as before, not updating timestamp", "yellow"))
+                else:
+                    new_entry_data['timestamp'] = datetime.datetime.now().isoformat()
+                    vault_data['entries'][index].update(new_entry_data)
+                    entry = vault_data['entries'][index]
         self.write(vault_data)
+
+        return entry
 
 
     def security_audit(self):
@@ -211,8 +220,10 @@ class Vault():
             if entry['password'] not in passwords:
                 passwords[entry['password']] = dict()
                 passwords[entry['password']]['entries'] = []
+
                 validate_password, pw_error = Vault.validate_password(entry['password'])
-                passwords[entry['password']]['valid'] = validate_password
+
+                passwords[entry['password']]['password_secure'] = validate_password
                 passwords[entry['password']]['pw_error'] = pw_error
 
             passwords[entry['password']]['entries'].append(entry)

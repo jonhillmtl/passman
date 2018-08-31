@@ -16,12 +16,6 @@ setup(name='passman',
         'pyperclip'
     ],
 
-    # TODO JHILL: this isn't working
-    dependency_links = [
-        'git+ssh://git@gitlab.com/f2m-data-science/lambda_package.git',
-        'git+ssh://git@gitlab.com/f2m-data-science/lambda_verify.git',
-    ],
-
     entry_points={
         'console_scripts': [
             'passman = passman:main'

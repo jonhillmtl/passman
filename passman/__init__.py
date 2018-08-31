@@ -42,6 +42,7 @@ COMMAND_ALIASES = dict(
     dv='dumo_vault',
     ave='add_vault_entry',
     dve='delete_vault_entry',
+    uve='update_vault_entry',
     mv='merge_vaults',
     cvp='change_vault_password',
     cc='clear_cache'
@@ -59,9 +60,7 @@ def prepare_args(command):
     """ touch up the args with separate requirements for each command """
     
     # TODO JHILL: unglobalize this
-
     # TODO JHILL: use vault_name and vault_password everywhere, even though it's longer
-    # TODO JHILL: make password interactive everywhere so it doesn't go in the history
 
     global args
     interactive_password = False

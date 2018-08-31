@@ -11,6 +11,7 @@ def add_vault_entry(args):
 
     try:
         entry = vault.add_entry(name=args.name, username=args.username, password=args.password)
+        entry['password'] = '<sensitive>'
         vault.add_history_entry('add_entry', entry, entry['timestamp'])
     except VaultEntryAlreadyExistsError:
         error_exit("entry for {} ({}) already exists. try update_vault_entry instead".format(
@@ -33,7 +34,7 @@ def create_vault(args):
     try:
         vault.create()
         vault.add_history_entry('create_vault', None, None)
-        
+
         # TODO JHILL: write cached password to cache file
     except VaultAlreadyExistsError as e:
         error_exit("vault already exists")
@@ -46,9 +47,8 @@ def create_vault(args):
 def delete_vault_entry(args):
     vault = Vault(args.name, args.password)
 
-    # TODO JHILL: put this in a utility function because we use it somewhere
-    # else too
     vault_data = vault.read()
+
     entry_id = smart_choice(
         [
             dict(
@@ -63,10 +63,10 @@ def delete_vault_entry(args):
     )
 
     if entry_id != -1:
-        print(entry_id)
         vault.delete_entry(entry_id)
 
-        # TODO JHILL: add_history_entry
+        vault.add_history_entry('delete_vault_entry', entry_id, None)
+
 
 def dump_vault(args):
     vault = Vault(args.vault_name, args.vault_password)
@@ -110,8 +110,10 @@ def pw(args):
     for entry in vault_data['entries']:
         if args.search.lower() in entry['name'].lower():
             matches.append(entry)
+
     if len(matches) == 0:
         error_exit("no matches found for {}".format(args.search))
+
     entry_id = smart_choice(
             [
                 dict(
@@ -142,7 +144,7 @@ def security_audit(args):
                 ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
             ))
 
-        if data['valid'] is False:
+        if data['password_secure'] is False:
             secure = False
             print("{} accounts have weak passwords: {}".format(
                 len(data['entries']),
@@ -152,7 +154,7 @@ def security_audit(args):
     if secure is True:
         print(colored("secure", "green"))
 
-    # TODO JHILL: add_history_entry
+    vault.add_history_entry('security_audit', None, None)
 
 
 def update_vault_entry(args):
@@ -172,7 +174,7 @@ def update_vault_entry(args):
     ])
 
     if entry_id != -1:
-        print(entry_id)
-        vault.update_entry(entry_id, name=args.name, username=args.username, password=args.password)
+        entry = vault.update_entry(entry_id, name=args.name, username=args.username, password=args.password)
+        entry['password'] = '<sensitive>'
+        vault.add_history_entry('update_vault_entry', entry, None)
 
-        # TODO JHILL: add_history_entry
