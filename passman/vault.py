@@ -180,13 +180,19 @@ class Vault():
         self.password = new_password
         self.write(vault_data)
 
+        return True
+
 
     def delete_entry(self, entry_id):
         vault_data = self.read()
+
         for index, entry in enumerate(vault_data['entries']):
             if entry['id'] == entry_id:
                 del vault_data['entries'][index]
+
         self.write(vault_data)
+
+        return True
 
 
     def update_entry(self, entry_id, **kwargs):
@@ -197,6 +203,7 @@ class Vault():
         new_entry_data = dict(**kwargs)
         entry = None
         vault_data = self.read()
+
         for index, entry in enumerate(vault_data['entries']):
             if entry['id'] == entry_id:
                 if entry['password'] == new_entry_data['password']:
@@ -206,6 +213,7 @@ class Vault():
                     new_entry_data['timestamp'] = datetime.datetime.now().isoformat()
                     vault_data['entries'][index].update(new_entry_data)
                     entry = vault_data['entries'][index]
+
         self.write(vault_data)
 
         return entry
@@ -227,6 +235,7 @@ class Vault():
                 passwords[entry['password']]['pw_error'] = pw_error
 
             passwords[entry['password']]['entries'].append(entry)
+
         return passwords
 
 
@@ -253,4 +262,5 @@ class Vault():
                     return json.loads(fernet.decrypt(f.read()))
                 except InvalidToken:
                     raise VaultWrongPasswordError(self.name)
+
             return True

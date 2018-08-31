@@ -58,7 +58,11 @@ def prepare_command_help_string():
     )
 
 argparser = argparse.ArgumentParser(description='passman - an inconvenient way to store your passwords', formatter_class=RawTextHelpFormatter)
-argparser.add_argument("command", help=prepare_command_help_string(), choices=COMMANDS)
+argparser.add_argument(
+    "command",
+    help=prepare_command_help_string(),
+    choices=COMMANDS + [k for k in COMMAND_ALIASES.keys()]
+)
 
 # need to parse_known_args because the other arguments are added on
 # a per command basis
@@ -76,7 +80,7 @@ def prepare_args(command):
     interactive_password = False
 
     if command == 'create_vault':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
         args = argparser.parse_args()
 
         vault = Vault(args.vault_name, None)
@@ -96,7 +100,7 @@ def prepare_args(command):
         args = argparser.parse_args()
 
     elif command == 'dump_vault':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
 
         interactive_password = True
 
@@ -104,7 +108,7 @@ def prepare_args(command):
         pass
 
     elif command == 'add_vault_entry':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
         argparser.add_argument("--name", required=True)
         argparser.add_argument("--username", required=True)
         argparser.add_argument("--password", required=True)
@@ -125,7 +129,7 @@ def prepare_args(command):
         argparser.add_argument("--v2pw", required=True)
 
     elif command =='change_vault_password':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
 
         # TODO JHILL: hmmmmm..... how do we get these interactively?
         # just do it right here I guess?
@@ -133,12 +137,12 @@ def prepare_args(command):
         argparser.add_argument("--new_password", required=True)
 
     elif command == 'delete_vault_entry':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
 
         interactive_password = True
 
     elif command == 'update_vault_entry':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
         argparser.add_argument("--name", required=True)
         argparser.add_argument("--username", required=True)
         argparser.add_argument("--password", required=True)
@@ -146,16 +150,15 @@ def prepare_args(command):
         interactive_password = True
 
     elif command == 'security_audit':
-        argparser.add_argument("--vault_name", required=True)
+        argparser.add_argument("--vault_name", required=False, default='default')
 
         interactive_password = True
     
-    elif command == 'pw':
-        argparser.add_argument("--vault_name", required=True)
-        argparser.add_argument("--search", required=True)
+    elif command == 'password':
+        argparser.add_argument("--vault_name", required=False, default='default')
+        argparser.add_argument("--search", required=False, default='')
 
         interactive_password = True
-
 
     # then reparse them to enforce the required-ness of them
     args = argparser.parse_args()
@@ -192,6 +195,7 @@ def call_command(command):
 
 def main():
     command = args.command
+
     if command not in COMMANDS:
         if command not in COMMAND_ALIASES:
             error_exit("{} not in ({})".format(args.command, ", ".join(COMMANDS)))

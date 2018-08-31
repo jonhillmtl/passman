@@ -39,6 +39,7 @@ def smart_choice(choices):
 def get_cache_password():
     return None
 
+
 def get_encryption_key(salt, password):
     if type(password) == str:
         password = password.encode('utf-8')

@@ -28,6 +28,7 @@ def change_vault_password(args):
     except VaultWeakPasswordError as e:
         error_exit("the password is too weak: {}".format(e.error))
 
+
 def create_vault(args):
     vault = Vault(args.vault_name, args.vault_password)
 
@@ -102,14 +103,17 @@ def merge_vaults(args):
     # TODO JHILL: add_history_entry
 
 
-def pw(args):
+def password(args):
     vault = Vault(args.vault_name, args.vault_password)
     vault_data = vault.read()
 
     matches = []
-    for entry in vault_data['entries']:
-        if args.search.lower() in entry['name'].lower():
-            matches.append(entry)
+    if args.search == '':
+        matches= vault_data['entries']
+    else:
+        for entry in vault_data['entries']:
+            if args.search.lower() in entry['name'].lower():
+                matches.append(entry)
 
     if len(matches) == 0:
         error_exit("no matches found for {}".format(args.search))

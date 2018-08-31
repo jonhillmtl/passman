@@ -20,7 +20,7 @@ Please read the disclaimer.
 
 The help command aims to be comprehensive. All of your questions will be answered there.
 
-Briefly, you should
+Briefly, you should:
 
 - `passman init`
 - `passman create_vault --vault_name=default`
@@ -30,6 +30,18 @@ You'll be prompted for a password.
 After that:
 
 - `passman --help`
+
+Most of what you'll want to achieve can be done with:
+
+- `passman add_vault_entry`,
+
+the arguments to which will be explained.
+
+You can retrieve passwords using the `password` command: `passman password`.
+
+The arguments to that will be carefully described.
+
+Otherwise, feel free to take a look around.
 
 ## Disclaimer
 
