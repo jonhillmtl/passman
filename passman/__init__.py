@@ -1,5 +1,6 @@
 from termcolor import colored
 from str2bool import str2bool
+from argparse import RawTextHelpFormatter
 
 import argparse
 import os
@@ -22,16 +23,16 @@ COMMANDS = [
     'add_vault_entry',          # implemented
     'delete_vault_entry',       # implemented
     'update_vault_entry',
-
-    'merge_vaults',             # implemented
     'change_vault_password',    # implemented
 
-    'resalt',                   # hmmm... they'd have to provide password for every vault
+    'merge_vaults',             # implemented
+
+    # 'resalt',                   # hmmm... they'd have to provide password for every vault
     'security_audit',           # implemented,
 
-    'pw'                        # implemented,
+    'password'                        # implemented,
 
-    'clear_cache'               # go for it
+    # 'clear_cache'               # go for it
 ]
 
 
@@ -39,43 +40,52 @@ COMMAND_ALIASES = dict(
     lv='list_vaults',
     sa='security_audit',
     cv='create_vault',
-    dv='dumo_vault',
+    dv='dump_vault',
     ave='add_vault_entry',
     dve='delete_vault_entry',
     uve='update_vault_entry',
     mv='merge_vaults',
     cvp='change_vault_password',
-    cc='clear_cache'
+    cc='clear_cache',
+    pw='password'
 )
 
 
+def prepare_command_help_string():
+    return "can be any one of:\n\n{}\n\nabbreviations are available:\n\n{}".format(
+        "\n".join(COMMANDS),
+        "\n".join(["{} == {}".format(k, v) for k, v in COMMAND_ALIASES.items()])
+    )
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument("command")
-argparser.add_argument("--interactive", default=False, type=str2bool, required=False)
+argparser = argparse.ArgumentParser(description='passman - an inconvenient way to store your passwords', formatter_class=RawTextHelpFormatter)
+argparser.add_argument("command", help=prepare_command_help_string(), choices=COMMANDS)
+
+# need to parse_known_args because the other arguments are added on
+# a per command basis
 args, unknown = argparser.parse_known_args()
-
 
 def prepare_args(command):
     """ touch up the args with separate requirements for each command """
-    
+
     # TODO JHILL: unglobalize this
     # TODO JHILL: use vault_name and vault_password everywhere, even though it's longer
+    # TODO JHILL: add tagging
+    # TODO JHILL: use subsparser, for real
 
     global args
     interactive_password = False
 
     if command == 'create_vault':
         argparser.add_argument("--vault_name", required=True)
-        
         args = argparser.parse_args()
-        
+
         vault = Vault(args.vault_name, None)
         if vault.exists:
             error_exit('vault already exists')
 
         password = getpass.getpass("enter password: ")
         confirm_password = getpass.getpass("confirm password: ")
+
         if password != confirm_password:
             error_exit("passwords do not match")
 
@@ -132,7 +142,6 @@ def prepare_args(command):
         argparser.add_argument("--name", required=True)
         argparser.add_argument("--username", required=True)
         argparser.add_argument("--password", required=True)
-        argparser.add_argument("--tags", required=False)
 
         interactive_password = True
 
