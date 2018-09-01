@@ -237,7 +237,8 @@ class Vault():
 
             passwords[entry['password']]['entries'].append(entry)
 
-        return passwords
+        # TODO JHILL: also check the ages of the passwords
+        return passwords, []
 
 
     def write(self, data):

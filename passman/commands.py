@@ -145,10 +145,11 @@ def password(args):
 def security_audit(args):
     vault = Vault(args.vault_name, args.vault_password)
 
-    audits = vault.security_audit()
+    # TODO JHILL: use entry audits
+    password_audits, entry_audits = vault.security_audit()
     secure = True
 
-    for password, data in audits.items():
+    for password, data in password_audits.items():
         if len(data['entries']) > 1:
             secure = False
             print("{} accounts have the same password: {}".format(

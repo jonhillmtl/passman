@@ -29,6 +29,7 @@ class Repo():
     @staticmethod
     def get_cached_password(vault_name):
         return None
+
         """
         cache_password = "{}_{}".format(get_rotation_time(), get_mac())
         print(cache_password)
