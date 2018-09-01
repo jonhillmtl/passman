@@ -32,7 +32,8 @@ COMMANDS = [
 
     'password'                        # implemented,
 
-    # 'clear_cache'               # go for it
+    # 'clear_history'               # go for it
+    # 'search_history'              # go for it
 ]
 
 
@@ -63,7 +64,7 @@ def get_interactive_password(argparser):
     # if password is None:
         # password = getpass.getpass("enter password: ")
     password = getpass.getpass("enter password: ")
-    
+
     # neat trick to put something on the command line and then 
     # you can parse it like it was always there
     sys.argv.extend(['--vault_password', password])
@@ -71,7 +72,7 @@ def get_interactive_password(argparser):
 
     # then reparse them to grab any --vault_password that might have been added
     args = argparser.parse_args()
-    
+
     return args
 
 

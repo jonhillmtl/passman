@@ -163,6 +163,8 @@ def security_audit(args):
                 ", ".join("{} ({})".format(e['name'], e['username']) for e in data['entries'])
             ))
 
+    # TODO JHILL: check the age of the password by their timestamp!!!
+
     if secure is True:
         print(colored("secure", "green"))
 
