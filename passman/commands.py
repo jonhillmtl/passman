@@ -46,7 +46,7 @@ def create_vault(args):
 
 
 def delete_vault_entry(args):
-    vault = Vault(args.name, args.password)
+    vault = Vault(args.vault_name, args.vault_password)
 
     vault_data = vault.read()
 
@@ -119,20 +119,28 @@ def password(args):
         error_exit("no matches found for {}".format(args.search))
 
     entry_id = smart_choice(
-            [
-                dict(
-                    choice_data=index,
-                    description="{} {}".format(
-                        entry['name'],
-                        entry['username']
-                    )
-                ) for (index, entry) in enumerate(matches)]
-        )
+        [
+            dict(
+                choice_data=index,
+                description="{} {}".format(
+                    entry['name'],
+                    entry['username']
+                )
+            ) for (index, entry) in enumerate(matches)
+        ]
+    )
 
     if entry_id != -1:
         pyperclip.copy(matches[entry_id]['password'])
         print(colored("copied to clipboard", "green"))
 
+        vault.add_history_entry(
+            'password',
+            dict(
+                entry_id=matches[entry_id]['id'],
+                search=args.search
+            )
+        )
 
 def security_audit(args):
     vault = Vault(args.vault_name, args.vault_password)

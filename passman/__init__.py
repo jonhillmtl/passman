@@ -57,16 +57,31 @@ def prepare_command_help_string():
         "\n".join(["{} == {}".format(k, v) for k, v in COMMAND_ALIASES.items()])
     )
 
+
 argparser = argparse.ArgumentParser(description='passman - an inconvenient way to store your passwords', formatter_class=RawTextHelpFormatter)
 argparser.add_argument(
     "command",
     help=prepare_command_help_string(),
     choices=COMMANDS + [k for k in COMMAND_ALIASES.keys()]
 )
+args = []
 
-# need to parse_known_args because the other arguments are added on
-# a per command basis
-args, unknown = argparser.parse_known_args()
+
+def get_interactive_password():
+    global args
+    # password = Repo.get_cached_password(args.vault_name)
+    # if password is None:
+        # password = getpass.getpass("enter password: ")
+    password = getpass.getpass("enter password: ")
+    
+    # neat trick to put something on the command line and then 
+    # you can parse it like it was always there
+    sys.argv.extend(['--vault_password', password])
+    argparser.add_argument("--vault_password", required=True)
+
+    # then reparse them to grab any --vault_password that might have been added
+    args = argparser.parse_args()
+
 
 def prepare_args(command):
     """ touch up the args with separate requirements for each command """
@@ -75,6 +90,7 @@ def prepare_args(command):
     # TODO JHILL: use vault_name and vault_password everywhere, even though it's longer
     # TODO JHILL: add tagging
     # TODO JHILL: use subsparser, for real
+    # TODO JHILL: check for the repo here
 
     global args
     interactive_password = False
@@ -164,28 +180,7 @@ def prepare_args(command):
     args = argparser.parse_args()
 
     if interactive_password is True:
-        # password = Repo.get_cached_password(args.vault_name)
-        # if password is None:
-            # password = getpass.getpass("enter password: ")
-        password = getpass.getpass("enter password: ")
-        
-        # neat trick to put something on the command line and then 
-        # you can parse it like it was always there
-        sys.argv.extend(['--vault_password', password])
-        argparser.add_argument("--vault_password", required=True)
-
-        # then reparse them to grab any --vault_password that might have been added
-        args = argparser.parse_args()
-
-        vault = Vault(args.vault_name, args.vault_password)
-        try:
-            vault.read()
-            # Repo.write_cached_password(args.vault_name, password)
-        except VaultWrongPasswordError:
-            error_exit("password is wrong")
-        except VaultNotFoundError:
-            error_exit("vault not found")
-
+        get_interactive_password()
 
 def call_command(command):
     if command not in globals():
@@ -194,6 +189,10 @@ def call_command(command):
 
 
 def main():
+    # need to parse_known_args because the other arguments are added on
+    # a per command basis
+    args, unknown = argparser.parse_known_args()
+
     command = args.command
 
     if command not in COMMANDS:
@@ -203,6 +202,17 @@ def main():
             command = COMMAND_ALIASES[command]
 
     prepare_args(command)
+    if 'vault_name' in args and 'vault_password' in args:
+        vault = Vault(args.vault_name, args.vault_password)
+        try:
+            vault.read()
+            # Repo.write_cached_password(args.vault_name, password)
+        except VaultWrongPasswordError:
+            error_exit("password is wrong")
+        except VaultNotFoundError:
+            error_exit("vault not found")
+
+    print(args)
     call_command(command)
 
 

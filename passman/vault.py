@@ -142,16 +142,17 @@ class Vault():
             timestamp = datetime.datetime.now().isoformat()
 
         history_entry = dict(
-            command_name=command_name,
+            command=command_name,
             hint=hint,
             timestamp=timestamp,
             vault_name=self.name
         )
-    
+
         data['history'].append(history_entry)
         self.write(data)
 
         return history_entry
+
 
     def merge_vault(self, source_vault):
         target_data = self.read()

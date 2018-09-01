@@ -94,6 +94,7 @@ class Repo():
         for d, sds, files in os.walk(self.path):
             for sd in sds:
                 vs.append(os.path.join(d, sd))
+
         return vs
 
 
