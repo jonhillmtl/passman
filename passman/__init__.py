@@ -58,17 +58,7 @@ def prepare_command_help_string():
     )
 
 
-argparser = argparse.ArgumentParser(description='passman - an inconvenient way to store your passwords', formatter_class=RawTextHelpFormatter)
-argparser.add_argument(
-    "command",
-    help=prepare_command_help_string(),
-    choices=COMMANDS + [k for k in COMMAND_ALIASES.keys()]
-)
-args = []
-
-
-def get_interactive_password():
-    global args
+def get_interactive_password(argparser):
     # password = Repo.get_cached_password(args.vault_name)
     # if password is None:
         # password = getpass.getpass("enter password: ")
@@ -81,18 +71,16 @@ def get_interactive_password():
 
     # then reparse them to grab any --vault_password that might have been added
     args = argparser.parse_args()
+    
+    return args
 
 
-def prepare_args(command):
+def prepare_args(command, argparser):
     """ touch up the args with separate requirements for each command """
 
-    # TODO JHILL: unglobalize this
-    # TODO JHILL: use vault_name and vault_password everywhere, even though it's longer
     # TODO JHILL: add tagging
     # TODO JHILL: use subsparser, for real
-    # TODO JHILL: check for the repo here
 
-    global args
     interactive_password = False
 
     if command == 'create_vault':
@@ -180,15 +168,26 @@ def prepare_args(command):
     args = argparser.parse_args()
 
     if interactive_password is True:
-        get_interactive_password()
+        args = get_interactive_password(argparser)
 
-def call_command(command):
+    return args
+
+
+def call_command(command, args):
     if command not in globals():
         error_exit("{} is unimplemented".format(command))
     globals()[command](args)
 
 
 def main():
+    # TODO JHILL: check that a repo exists?
+    argparser = argparse.ArgumentParser(description='passman - an inconvenient way to store your passwords', formatter_class=RawTextHelpFormatter)
+    argparser.add_argument(
+        "command",
+        help=prepare_command_help_string(),
+        choices=COMMANDS + [k for k in COMMAND_ALIASES.keys()]
+    )
+
     # need to parse_known_args because the other arguments are added on
     # a per command basis
     args, unknown = argparser.parse_known_args()
@@ -201,7 +200,8 @@ def main():
         else:
             command = COMMAND_ALIASES[command]
 
-    prepare_args(command)
+    args = prepare_args(command, argparser)
+
     if 'vault_name' in args and 'vault_password' in args:
         vault = Vault(args.vault_name, args.vault_password)
         try:
@@ -212,8 +212,8 @@ def main():
         except VaultNotFoundError:
             error_exit("vault not found")
 
-    print(args)
-    call_command(command)
+
+    call_command(command, args)
 
 
 if __name__ == '__main__':
